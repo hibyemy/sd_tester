@@ -17,11 +17,20 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
-    env:
-      RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: vars
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.tag_name }}"
+          } else {
+            $tag = "${{ github.ref_name }}"
+          }
+          "release_tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -36,7 +45,10 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist -Force | Out-Null
-          $zipName = "sd_tester-$env:RELEASE_TAG-windows-x64.zip"
+          $tag = "${{ steps.vars.outputs.release_tag }}"
+          $zipName = "sd_tester-$tag-windows-x64.zip"
+          $exeName = "sd_tester-$tag-windows-x64.exe"
+          Copy-Item "target/release/sd_tester.exe" "dist/$exeName" -Force
           Compress-Archive -Path "target/release/sd_tester.exe" -DestinationPath "dist/$zipName" -Force
 
       - name: Install WiX Toolset and cargo-wix
@@ -46,19 +58,21 @@ jobs:
           cargo install cargo-wix --locked
 
       - name: Build MSI installer
+        continue-on-error: true
         shell: pwsh
         run: |
-          $msiName = "sd_tester-$env:RELEASE_TAG-windows-x64.msi"
+          $tag = "${{ steps.vars.outputs.release_tag }}"
+          $msiName = "sd_tester-$tag-windows-x64.msi"
           cargo wix --no-build --output "dist/$msiName"
 
       - name: Create or update GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_TAG }}
+          tag: ${{ steps.vars.outputs.release_tag }}
+          name: ${{ steps.vars.outputs.release_tag }}
+          allowUpdates: true
+          artifactErrorsFailBuild: true
           draft: false
           prerelease: false
-          generate_release_notes: true
-          files: |
-            dist/*.zip
-            dist/*.msi
+          generateReleaseNotes: true
+          artifacts: "dist/*.zip,dist/*.exe,dist/*.msi"

@@ -73,6 +73,7 @@ Executable:
 This repository includes a GitHub Actions workflow that builds Windows release artifacts and uploads them to GitHub Releases:
 
 - Portable executable package: `sd_tester-<tag>-windows-x64.zip`
+- Standalone executable: `sd_tester-<tag>-windows-x64.exe`
 - Installer package: `sd_tester-<tag>-windows-x64.msi`
 
 Workflow file:
