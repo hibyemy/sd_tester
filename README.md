@@ -21,7 +21,7 @@ This app is designed for hardware enthusiasts and media/forensics validation wor
 - Capacity modes:
   - Look-back checkpoint verification
   - Brute-force full write + full verify
-- Raw admin-only forensics paths:
+- Raw admin-only forensics paths(doesnt work currently):
   - Physical-drive stride checks
   - CID read path (controller/driver dependent)
 - Session cleanup:
@@ -33,8 +33,7 @@ This app is designed for hardware enthusiasts and media/forensics validation wor
 
 Some tests are destructive or can stress media heavily.
 
-- **Raw Stride Test** writes to `\\.\PhysicalDriveX` and bypasses filesystem safety.
-- Use sacrificial/test media where appropriate.
+- **Raw Stride Test** writes to `\\.\PhysicalDriveX` and bypasses filesystem safety(doesnt currently work).
 - Run admin-required operations only when you explicitly intend to.
 
 ## Tech Stack
@@ -76,18 +75,6 @@ This repository includes a GitHub Actions workflow that builds Windows release a
 - Standalone executable: `sd_tester-<tag>-windows-x64.exe`
 - Windows installer: `sd_tester-<tag>-windows-x64-installer.exe` (built with Inno Setup)
 
-Workflow file:
-
-- `.github/workflows/release-windows.yml`
-
-How to publish a new release artifact set:
-
-1. Create and push a semver-like tag (example `v0.1.1`):
-   - `git tag v0.1.1`
-   - `git push origin v0.1.1`
-2. GitHub Actions builds and attaches the `.zip` and `.msi` to the release for that tag.
-
-You can also trigger the same workflow manually with `workflow_dispatch` and a tag name.
 
 ## Test Modes
 
@@ -115,7 +102,7 @@ Outputs include:
 - Tested/Verified/Usable capacity
 - Counterfeit/wrap-around failure signaling
 
-### 3) Forensics (Admin)
+### 3) Forensics (Admin)(doesnt work currently)
 
 - Raw stride marker workflow
 - CID read path via Win32 IOCTL flow (hardware/driver support varies)
@@ -132,6 +119,3 @@ Outputs include:
 - Bus-type identification is best-effort from available storage properties.
 - Some removable media/adapter stacks enforce restrictive access patterns.
 
-## License
-
-No license file has been added yet. Add a `LICENSE` if you plan to distribute this project publicly.
