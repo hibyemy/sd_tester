@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Existing or new tag to release (for example v0.1.1)"
+        description: "Existing or new tag to release (for example v0.1.3)"
         required: true
         type: string
 
@@ -30,7 +30,9 @@ jobs:
           } else {
             $tag = "${{ github.ref_name }}"
           }
+          $version = $tag.TrimStart("v")
           "release_tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -41,29 +43,45 @@ jobs:
       - name: Build release executable
         run: cargo build --release
 
-      - name: Create portable zip
+      - name: Stage portable artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist -Force | Out-Null
           $tag = "${{ steps.vars.outputs.release_tag }}"
-          $zipName = "sd_tester-$tag-windows-x64.zip"
           $exeName = "sd_tester-$tag-windows-x64.exe"
+          $zipName = "sd_tester-$tag-windows-x64.zip"
           Copy-Item "target/release/sd_tester.exe" "dist/$exeName" -Force
           Compress-Archive -Path "target/release/sd_tester.exe" -DestinationPath "dist/$zipName" -Force
+          Get-ChildItem dist | Format-Table -AutoSize
 
-      - name: Install WiX Toolset and cargo-wix
+      - name: Install Inno Setup
         shell: pwsh
-        run: |
-          choco install wixtoolset -y --no-progress
-          cargo install cargo-wix --locked
+        run: choco install innosetup -y --no-progress
 
-      - name: Build MSI installer
+      - name: Build Inno Setup installer
+        id: installer
         continue-on-error: true
         shell: pwsh
         run: |
           $tag = "${{ steps.vars.outputs.release_tag }}"
-          $msiName = "sd_tester-$tag-windows-x64.msi"
-          cargo wix --no-build --output "dist/$msiName"
+          $version = "${{ steps.vars.outputs.version }}"
+          $installerName = "sd_tester-$tag-windows-x64-installer"
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-Not (Test-Path $iscc)) {
+            Write-Host "ISCC.exe not found at $iscc"
+            exit 1
+          }
+          & $iscc `
+            /DMyAppVersion="$version" `
+            /DSourceExe="..\target\release\sd_tester.exe" `
+            /DOutputDir="..\dist" `
+            /DOutputBaseName="$installerName" `
+            installer\sd_tester.iss
+          Get-ChildItem dist | Format-Table -AutoSize
+
+      - name: List dist contents
+        shell: pwsh
+        run: Get-ChildItem dist -Recurse | Format-Table -AutoSize
 
       - name: Create or update GitHub release
         uses: ncipollo/release-action@v1
@@ -71,8 +89,9 @@ jobs:
           tag: ${{ steps.vars.outputs.release_tag }}
           name: ${{ steps.vars.outputs.release_tag }}
           allowUpdates: true
-          artifactErrorsFailBuild: true
+          replacesArtifacts: true
           draft: false
           prerelease: false
           generateReleaseNotes: true
-          artifacts: "dist/*.zip,dist/*.exe,dist/*.msi"
+          artifacts: "dist/*.exe,dist/*.zip"
+          artifactErrorsFailBuild: false

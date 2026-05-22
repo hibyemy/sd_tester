@@ -74,7 +74,7 @@ This repository includes a GitHub Actions workflow that builds Windows release a
 
 - Portable executable package: `sd_tester-<tag>-windows-x64.zip`
 - Standalone executable: `sd_tester-<tag>-windows-x64.exe`
-- Installer package: `sd_tester-<tag>-windows-x64.msi`
+- Windows installer: `sd_tester-<tag>-windows-x64-installer.exe` (built with Inno Setup)
 
 Workflow file:
 
