@@ -68,6 +68,26 @@ Executable:
 
 `target/release/sd_tester.exe`
 
+## GitHub Release Artifacts (EXE + MSI)
+
+This repository includes a GitHub Actions workflow that builds Windows release artifacts and uploads them to GitHub Releases:
+
+- Portable executable package: `sd_tester-<tag>-windows-x64.zip`
+- Installer package: `sd_tester-<tag>-windows-x64.msi`
+
+Workflow file:
+
+- `.github/workflows/release-windows.yml`
+
+How to publish a new release artifact set:
+
+1. Create and push a semver-like tag (example `v0.1.1`):
+   - `git tag v0.1.1`
+   - `git push origin v0.1.1`
+2. GitHub Actions builds and attaches the `.zip` and `.msi` to the release for that tag.
+
+You can also trigger the same workflow manually with `workflow_dispatch` and a tag name.
+
 ## Test Modes
 
 ### 1) Benchmark

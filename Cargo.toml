@@ -2,6 +2,16 @@
 name = "sd_tester"
 version = "0.1.0"
 edition = "2024"
+description = "Native Windows SD/USB diagnostic and benchmarking tool"
+repository = "https://github.com/hibyemy/sd_tester"
+license = "MIT"
+
+[package.metadata.wix]
+manufacturer = "sd_tester contributors"
+product-name = "SD/USB Native Tester"
+upgrade-guid = "F2B8E248-6BC7-4D9F-AB44-5A9F6C8F5A9F"
+path-guid = "4C8A13D1-D8E0-4A89-9A67-112AA7D24802"
+license = false
 
 [dependencies]
 eframe = "0.33"
